@@ -189,3 +189,13 @@ type Response struct {
 	Message string `json:"message"`
 	Data    any    `json:"data,omitempty"`
 }
+
+// header := []string{"id", "collection_name", "key", "value", "verdict", "remarks"}
+type CapabilitiesCSVHeader struct {
+	ID             string `prep:"trim" validate:"required"`
+	CollectionName string `prep:"trim" validate:"required"`
+	Key            string `prep:"trim" validate:"required"`
+	Value          string `prep:"trim" validate:"required"`
+	Verdict        string `prep:"trim" validate:"required"`
+	Remarks        string `prep:"trim" validate:"required"`
+}

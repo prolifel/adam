@@ -163,3 +163,50 @@ func (r *Repo) ExportNotYetVerdict() (string, error) {
 	fmt.Printf("Exported %d records to %s\n", count, filename)
 	return filename, nil
 }
+
+func (r *Repo) UpdateVerdicts(records []CapabilitiesCSVHeader) (int, error) {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`
+		UPDATE container_profiles 
+		SET verdict = ?, remarks = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	updatedCount := 0
+	for _, record := range records {
+		// Validate verdict value
+		if record.Verdict != "not_yet" && record.Verdict != "legitimate" && record.Verdict != "not_legitimate" {
+			return 0, fmt.Errorf("invalid verdict value '%s' for ID %s. Must be: not_yet, legitimate, or not_legitimate", record.Verdict, record.ID)
+		}
+
+		result, err := stmt.Exec(record.Verdict, record.Remarks, record.ID)
+		if err != nil {
+			return 0, fmt.Errorf("failed to update record ID %s: %v", record.ID, err)
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return 0, err
+		}
+
+		if rowsAffected > 0 {
+			updatedCount++
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	fmt.Printf("Updated %d records in database\n", updatedCount)
+	return updatedCount, nil
+}

@@ -28,4 +28,4 @@ go.work
 
 .env
 *.db
-*.csv
+**/*.csv

@@ -24,11 +24,9 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Fetch profiles endpoint
 	mux.HandleFunc("/fetch", fetchProfile(service))
-
-	// Send verdict email endpoint
 	mux.HandleFunc("/send-verdict", sendVerdict(service))
+	mux.HandleFunc("/update-verdict", updateVerdict(service))
 
 	// Health check endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +36,9 @@ func main() {
 
 	fmt.Println("Server starting on :8080")
 	fmt.Println("Endpoints:")
-	fmt.Println("  GET /fetch - Fetch and save container profiles")
-	fmt.Println("  GET /send-verdict - Send verdict email with CSV")
+	fmt.Println("  GET  /fetch - Fetch and save container profiles")
+	fmt.Println("  GET  /send-verdict - Send verdict email with CSV")
+	fmt.Println("  POST /update-verdict - Update verdicts from CSV file")
 	fmt.Println("  GET  /health - Health check")
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
