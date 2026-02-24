@@ -9,6 +9,7 @@ type Config struct {
 	SMTPPassword    string `env:"SMTP_PASSWORD"`
 	EmailFrom       string `env:"EMAIL_FROM"`
 	EmailTo         string `env:"EMAIL_TO"` // Comma-separated email addresses
+	Token           string `env:"TOKEN"`
 }
 
 type AuthenticateRequest struct {
@@ -182,4 +183,9 @@ type VerdictRecord struct {
 	Value          string
 	Verdict        string
 	Remarks        string
+}
+
+type Response struct {
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }

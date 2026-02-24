@@ -11,11 +11,6 @@ type Service struct {
 }
 
 func (s *Service) SendVerdict() error {
-	// Validate email configuration
-	if s.Cfg.SMTPHost == "" || s.Cfg.SMTPPort == 0 || s.Cfg.EmailFrom == "" || s.Cfg.EmailTo == "" {
-		return fmt.Errorf("email configuration is incomplete. Please check your .env file")
-	}
-
 	// Export CSV
 	csvFilename, err := s.Repo.ExportNotYetVerdict()
 	if err != nil {
