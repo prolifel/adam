@@ -1,0 +1,36 @@
+services:
+  adam:
+    container_name: adam
+    image: cr.prolifel.com/adam:latest
+    expose:
+      - "8080"
+    networks:
+      - nginx_proxy
+      - adam_net
+    volumes:
+      - adam_data:/app/data
+    environment:
+      - ACCESS_KEY_ID=${ACCESS_KEY_ID}
+      - SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_TO=${EMAIL_TO}
+      - TOKEN=${TOKEN}
+      - DB_PATH=/app/data/container_profiles.db
+  adam-cron:
+    container_name: adam-cron
+    image: cr.prolifel.com/adam-cron:latest
+    networks:
+      - adam_net
+    depends_on:
+      - adam
+
+volumes:
+  adam_data:
+networks:
+  adam_net:
+  nginx_proxy:
+      external: true

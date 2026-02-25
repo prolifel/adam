@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
@@ -11,9 +13,26 @@ import (
 )
 
 func initDB() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "./container_profiles.db")
+	// Get database path from environment or use default
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "./container_profiles.db"
+	}
+
+	// Ensure the directory exists
+	dbDir := filepath.Dir(dbPath)
+	if err := os.MkdirAll(dbDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create database directory: %w", err)
+	}
+
+	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
+	}
+
+	// Test the connection
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
 	// Run migrations
@@ -30,9 +49,6 @@ func initDB() (*sql.DB, error) {
 
 func startProgram() do.Injector {
 	err := godotenv.Load()
-	if err != nil {
-		panic(fmt.Errorf("Failed to get .env file: %+v", err))
-	}
 
 	var cfg Config
 	err = env.Parse(&cfg)
