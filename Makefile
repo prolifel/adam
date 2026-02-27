@@ -11,7 +11,11 @@ else
     IMAGE_NAME := $(REGISTRY_URL)/$(APP_NAME)
 endif
 
-.PHONY: all build push build-local build-amd64 push-amd64 tag clean help
+.PHONY: all build run build-local build-amd64 push-amd64 tag clean help
+
+# Local Go build and run
+run:
+	go build -o $(APP_NAME) . && ./$(APP_NAME)
 
 all: build-amd64 push
 
@@ -50,6 +54,7 @@ clean:
 
 help:
 	@echo "Available targets:"
+	@echo "  make run                   - Build and run Go binary locally"
 	@echo "  make all                   - Build multi-platform and push (requires REGISTRY_URL)"
 	@echo "  make build                 - Build multi-platform image"
 	@echo "  make build-amd64           - Build AMD64 only and load locally"

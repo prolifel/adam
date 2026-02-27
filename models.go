@@ -23,26 +23,26 @@ type AuthenticateResponse struct {
 
 type ContainerProfile struct {
 	ID           string       `json:"_id"`
-	AccountIDs   []string     `json:"accountIDs,omitempty"`
-	Archived     bool         `json:"archived,omitempty"`
+	AccountIDs   []string     `json:"accountIDs"`
+	Archived     bool         `json:"archived"`
 	Capabilities Capabilities `json:"capabilities,omitempty"`
 	Cluster      string       `json:"cluster,omitempty"`
-	Collections  []string     `json:"collections,omitempty"`
+	Collections  []string     `json:"collections"`
 	Created      string       `json:"created,omitempty"`
 	Entrypoint   string       `json:"entrypoint,omitempty"`
 	// Events                       []HistoryEvent        `json:"events,omitempty"`
 	Filesystem                   ProfileFilesystem     `json:"filesystem,omitempty"`
 	Hash                         int64                 `json:"hash,omitempty"`
-	HostNetwork                  bool                  `json:"hostNetwork,omitempty"`
-	HostPid                      bool                  `json:"hostPid,omitempty"`
+	HostNetwork                  bool                  `json:"hostNetwork"`
+	HostPid                      bool                  `json:"hostPid"`
 	Image                        string                `json:"image,omitempty"`
 	ImageID                      string                `json:"imageID,omitempty"`
-	Infra                        bool                  `json:"infra,omitempty"`
-	Istio                        bool                  `json:"istio,omitempty"`
+	Infra                        bool                  `json:"infra"`
+	Istio                        bool                  `json:"istio"`
 	K8s                          ProfileKubernetesData `json:"k8s,omitempty"`
 	Label                        string                `json:"label,omitempty"`
 	LastUpdate                   string                `json:"lastUpdate,omitempty"`
-	LearnedStartup               bool                  `json:"learnedStartup,omitempty"`
+	LearnedStartup               bool                  `json:"learnedStartup"`
 	Namespace                    string                `json:"namespace,omitempty"`
 	Network                      ProfileNetwork        `json:"network,omitempty"`
 	OS                           string                `json:"os,omitempty"`
@@ -53,17 +53,17 @@ type ContainerProfile struct {
 }
 
 type Capabilities struct {
-	CI                     bool `json:"ci,omitempty"`
-	CloudMetadata          bool `json:"cloudMetadata,omitempty"`
-	DNSCache               bool `json:"dnsCache,omitempty"`
-	DynamicDNSQuery        bool `json:"dynamicDNSQuery,omitempty"`
-	DynamicFileCreation    bool `json:"dynamicFileCreation,omitempty"`
-	DynamicProcessCreation bool `json:"dynamicProcessCreation,omitempty"`
-	K8s                    bool `json:"k8s,omitempty"`
-	Proxy                  bool `json:"proxy,omitempty"`
-	PullImage              bool `json:"pullImage,omitempty"`
-	Sshd                   bool `json:"sshd,omitempty"`
-	Unpacker               bool `json:"unpacker,omitempty"`
+	CI                     bool `json:"ci"`
+	CloudMetadata          bool `json:"cloudMetadata"`
+	DNSCache               bool `json:"dnsCache"`
+	DynamicDNSQuery        bool `json:"dynamicDNSQuery"`
+	DynamicFileCreation    bool `json:"dynamicFileCreation"`
+	DynamicProcessCreation bool `json:"dynamicProcessCreation"`
+	K8s                    bool `json:"k8s"`
+	Proxy                  bool `json:"proxy"`
+	PullImage              bool `json:"pullImage"`
+	Sshd                   bool `json:"sshd"`
+	Unpacker               bool `json:"unpacker"`
 }
 
 type HistoryEvent struct {
@@ -74,29 +74,29 @@ type HistoryEvent struct {
 }
 
 type ProfileFilesystem struct {
-	Behavioral []FilesystemEntry `json:"behavioral,omitempty"`
-	Static     []FilesystemEntry `json:"static,omitempty"`
+	Behavioral []FilesystemEntry `json:"behavioral"`
+	Static     []FilesystemEntry `json:"static"`
 }
 
 type FilesystemEntry struct {
-	Mount   bool   `json:"mount,omitempty"`
+	Mount   bool   `json:"mount"`
 	Path    string `json:"path,omitempty"`
 	Process string `json:"process,omitempty"`
 	Time    string `json:"time,omitempty"`
 }
 
 type ProfileKubernetesData struct {
-	ClusterRoles   []K8sRole `json:"clusterRoles,omitempty"`
-	Roles          []K8sRole `json:"roles,omitempty"`
+	ClusterRoles   []K8sRole `json:"clusterRoles"`
+	Roles          []K8sRole `json:"roles"`
 	ServiceAccount string    `json:"serviceAccount,omitempty"`
 }
 
 type K8sRole struct {
-	Labels      []Label   `json:"labels,omitempty"`
+	Labels      []Label   `json:"labels"`
 	Name        string    `json:"name,omitempty"`
 	Namespace   string    `json:"namespace,omitempty"`
 	RoleBinding string    `json:"roleBinding,omitempty"`
-	Rules       []K8sRule `json:"rules,omitempty"`
+	Rules       []K8sRule `json:"rules"`
 	Version     string    `json:"version,omitempty"`
 }
 
@@ -106,11 +106,11 @@ type Label struct {
 }
 
 type K8sRule struct {
-	APIGroups       []string `json:"apiGroups,omitempty"`
-	NonResourceURLs []string `json:"nonResourceURLs,omitempty"`
-	ResourceNames   []string `json:"resourceNames,omitempty"`
-	Resources       []string `json:"resources,omitempty"`
-	Verbs           []string `json:"verbs,omitempty"`
+	APIGroups       []string `json:"apiGroups"`
+	NonResourceURLs []string `json:"nonResourceURLs"`
+	ResourceNames   []string `json:"resourceNames"`
+	Resources       []string `json:"resources"`
+	Verbs           []string `json:"verbs"`
 }
 
 type ProfileNetwork struct {
@@ -120,8 +120,8 @@ type ProfileNetwork struct {
 }
 
 type ProfileNetworkBehavioral struct {
-	DNSQueries     []DNSQuery      `json:"dnsQueries,omitempty"`
-	ListeningPorts []ListeningPort `json:"listeningPorts,omitempty"`
+	DNSQueries     []DNSQuery      `json:"dnsQueries"`
+	ListeningPorts []ListeningPort `json:"listeningPorts"`
 	OutboundPorts  ProfilePortData `json:"outboundPorts,omitempty"`
 }
 
@@ -136,8 +136,8 @@ type ListeningPort struct {
 }
 
 type ProfilePortData struct {
-	All   bool   `json:"all,omitempty"`
-	Ports []Port `json:"ports,omitempty"`
+	All   bool   `json:"all"`
+	Ports []Port `json:"ports"`
 }
 
 type Port struct {
@@ -146,7 +146,7 @@ type Port struct {
 }
 
 type ProfileNetworkGeoIP struct {
-	Countries []GeoIPCountry `json:"countries,omitempty"`
+	Countries []GeoIPCountry `json:"countries"`
 	Modified  string         `json:"modified,omitempty"`
 }
 
@@ -157,19 +157,19 @@ type GeoIPCountry struct {
 }
 
 type ProfileNetworkStatic struct {
-	ListeningPorts []ListeningPort `json:"listeningPorts,omitempty"`
+	ListeningPorts []ListeningPort `json:"listeningPorts"`
 }
 
 type ProfileProcesses struct {
-	Behavioral []ProcessEntry `json:"behavioral,omitempty"`
-	Static     []ProcessEntry `json:"static,omitempty"`
+	Behavioral []ProcessEntry `json:"behavioral"`
+	Static     []ProcessEntry `json:"static"`
 }
 
 type ProcessEntry struct {
 	Command     string `json:"command,omitempty"`
-	Interactive bool   `json:"interactive,omitempty"`
+	Interactive bool   `json:"interactive"`
 	MD5         string `json:"md5,omitempty"`
-	Modified    bool   `json:"modified,omitempty"`
+	Modified    bool   `json:"modified"`
 	Path        string `json:"path,omitempty"`
 	PPath       string `json:"ppath,omitempty"`
 	Time        string `json:"time,omitempty"`
@@ -198,4 +198,133 @@ type CapabilitiesCSVHeader struct {
 	Value          string `prep:"trim" validate:"required"`
 	Verdict        string `prep:"trim" validate:"required"`
 	Remarks        string `prep:"trim" validate:"required"`
+}
+
+// ContainerPolicy represents the Prisma Cloud Runtime Container Policy
+type ContainerPolicy struct {
+	ID               string          `json:"_id,omitempty"`
+	LearningDisabled bool            `json:"learningDisabled"`
+	Rules            []ContainerRule `json:"rules"`
+}
+
+type ContainerRule struct {
+	AdvancedProtectionEffect       string         `json:"advancedProtectionEffect,omitempty"`
+	CloudMetadataEnforcementEffect string         `json:"cloudMetadataEnforcementEffect,omitempty"`
+	Collections                    []Collection   `json:"collections"`
+	CustomRules                    []CustomRule   `json:"customRules"`
+	Disabled                       bool           `json:"disabled"`
+	DNS                            DNSRule        `json:"dns,omitempty"`
+	Filesystem                     FileSystemRule `json:"filesystem,omitempty"`
+	KubernetesEnforcementEffect    string         `json:"kubernetesEnforcementEffect,omitempty"`
+	Modified                       string         `json:"modified,omitempty"`
+	Name                           string         `json:"name,omitempty"`
+	Network                        NetworkRule    `json:"network,omitempty"`
+	Owner                          string         `json:"owner,omitempty"`
+	PreviousName                   string         `json:"previousName,omitempty"`
+	Processes                      ProcessRule    `json:"processes,omitempty"`
+	SkipExecSessions               bool           `json:"skipExecSessions"`
+	WildFireAnalysisEffect         string         `json:"wildFireAnalysis,omitempty"`
+}
+
+// Collection represents a collection within a rule - full Prisma Cloud schema
+type Collection struct {
+	AccountIDs  []string `json:"accountIDs"`
+	AppIDs      []string `json:"appIDs"`
+	Clusters    []string `json:"clusters"`
+	Color       string   `json:"color,omitempty"`
+	Containers  []string `json:"containers"`
+	Description string   `json:"description,omitempty"`
+	Functions   []string `json:"functions"`
+	Hosts       []string `json:"hosts"`
+	Images      []string `json:"images"`
+	Labels      []string `json:"labels"`
+	Modified    string   `json:"modified,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Namespaces  []string `json:"namespaces"`
+	Owner       string   `json:"owner,omitempty"`
+	Prisma      bool     `json:"prisma"`
+	System      bool     `json:"system"`
+}
+
+// DNSRule contains DNS-related runtime rules (matches fetch manual.json)
+type DNSRule struct {
+	DefaultEffect string     `json:"defaultEffect,omitempty"`
+	Disabled      bool       `json:"disabled"`
+	DomainList    DomainList `json:"domainList,omitempty"`
+}
+
+// DomainList contains allowed/blocked domains
+type DomainList struct {
+	Allowed []string `json:"allowed"`
+	Denied  []string `json:"denied"`
+	Effect  string   `json:"effect,omitempty"`
+}
+
+// FileSystemRule contains filesystem-related runtime rules (matches fetch manual.json)
+type FileSystemRule struct {
+	AllowedList                []string             `json:"allowedList"`
+	BackdoorFilesEffect        string               `json:"backdoorFilesEffect,omitempty"`
+	DefaultEffect              string               `json:"defaultEffect,omitempty"`
+	DeniedList                 FileSystemDeniedList `json:"deniedList,omitempty"`
+	Disabled                   bool                 `json:"disabled"`
+	EncryptedBinariesEffect    string               `json:"encryptedBinariesEffect,omitempty"`
+	NewFilesEffect             string               `json:"newFilesEffect,omitempty"`
+	SuspiciousELFHeadersEffect string               `json:"suspiciousELFHeadersEffect,omitempty"`
+}
+
+type FileSystemDeniedList struct {
+	Effect string   `json:"effect,omitempty"`
+	Paths  []string `json:"paths"`
+}
+
+// NetworkRule contains network-related runtime rules (matches fetch manual.json)
+type NetworkRule struct {
+	AllowedIPs         []string      `json:"allowedIPs"`
+	DefaultEffect      string        `json:"defaultEffect,omitempty"`
+	DeniedIPs          []string      `json:"deniedIPs"`
+	DeniedIPsEffect    string        `json:"deniedIPsEffect,omitempty"`
+	Disabled           bool          `json:"disabled"`
+	ListeningPorts     ContainerPort `json:"listeningPorts,omitempty"`
+	ModifiedProcEffect string        `json:"modifiedProcEffect,omitempty"`
+	OutboundPorts      ContainerPort `json:"outboundPorts,omitempty"`
+	PortScanEffect     string        `json:"portScanEffect,omitempty"`
+	RawSocketsEffect   string        `json:"rawSocketsEffect,omitempty"`
+}
+
+type ContainerPort struct {
+	Allowed []ContainerPortObject `json:"allowed"`
+	Denied  []ContainerPortObject `json:"denied"`
+	Effect  string                `json:"effect,omitempty"`
+}
+
+type ContainerPortObject struct {
+	Deny  bool `json:"deny"`
+	End   int  `json:"end,omitempty"`
+	Start int  `json:"start,omitempty"`
+}
+
+// ProcessRule contains process-related runtime rules (matches fetch manual.json)
+type ProcessRule struct {
+	AllowedList           []string   `json:"allowedList"`
+	CheckParentChild      bool       `json:"checkParentChild"`
+	CryptoMinersEffect    string     `json:"cryptoMinersEffect,omitempty"`
+	DefaultEffect         string     `json:"defaultEffect,omitempty"`
+	DeniedList            DeniedList `json:"deniedList,omitempty"`
+	Disabled              bool       `json:"disabled"`
+	LateralMovementEffect string     `json:"lateralMovementEffect,omitempty"`
+	ModifiedProcessEffect string     `json:"modifiedProcessEffect,omitempty"`
+	ReverseShellEffect    string     `json:"reverseShellEffect,omitempty"`
+	SuidBinariesEffect    string     `json:"suidBinariesEffect,omitempty"`
+}
+
+type DeniedList struct {
+	Effect string   `json:"effect,omitempty"`
+	Paths  []string `json:"paths"`
+}
+
+// CustomRule contains custom runtime rule definitions
+type CustomRule struct {
+	ID     int    `json:"_id,omitempty"`
+	Effect string `json:"effect,omitempty"`
+	Action string `json:"action,omitempty"`
 }

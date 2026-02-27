@@ -25,6 +25,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/fetch", fetchProfile(service))
+	mux.HandleFunc("/container/fetch-policies", fetchPolicies(service))
 	mux.HandleFunc("/send-verdict", sendVerdict(service))
 	mux.HandleFunc("/update-verdict", updateVerdict(service))
 
@@ -37,6 +38,7 @@ func main() {
 	fmt.Println("Server starting on :8080")
 	fmt.Println("Endpoints:")
 	fmt.Println("  GET  /fetch - Fetch and save container profiles")
+	fmt.Println("  GET  /container/fetch-policies - Fetch and save runtime container policies")
 	fmt.Println("  GET  /send-verdict - Send verdict email with CSV")
 	fmt.Println("  POST /update-verdict - Update verdicts from CSV file")
 	fmt.Println("  GET  /health - Health check")

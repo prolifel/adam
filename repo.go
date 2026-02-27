@@ -3,8 +3,10 @@ package main
 import (
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 )
@@ -209,4 +211,186 @@ func (r *Repo) UpdateVerdicts(records []CapabilitiesCSVHeader) (int, error) {
 
 	fmt.Printf("Updated %d records in database\n", updatedCount)
 	return updatedCount, nil
+}
+
+func (r *Repo) SaveRules(policy ContainerPolicy) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`
+		INSERT OR REPLACE INTO container_rules (collection_name, rule)
+		VALUES (?, ?)
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	// Track which collections we've already saved to avoid duplicates
+	savedCollections := make(map[string]bool)
+
+	// If no rules, nothing to save
+	if len(policy.Rules) == 0 {
+		return tx.Commit()
+	}
+
+	// Iterate over rules and extract collection names
+	for _, rule := range policy.Rules {
+		// If no collections defined, use rule name as collection name
+		if len(rule.Collections) == 0 {
+			if rule.Name != "" && !savedCollections[rule.Name] {
+				ruleJSON, err := json.Marshal(rule)
+				if err != nil {
+					return err
+				}
+				_, err = stmt.Exec(rule.Name, string(ruleJSON))
+				if err != nil {
+					return err
+				}
+				savedCollections[rule.Name] = true
+			}
+			continue
+		}
+
+		// Save each collection for this rule
+		for _, collection := range rule.Collections {
+			collectionName := collection.Name
+			if collectionName == "" || collectionName == "Container - Alert on All Container" || collectionName == "All" {
+				continue
+			}
+			if savedCollections[collectionName] {
+				continue
+			}
+
+			ruleJSON, err := json.Marshal(rule)
+			if err != nil {
+				return err
+			}
+			_, err = stmt.Exec(collectionName, string(ruleJSON))
+			if err != nil {
+				return err
+			}
+			savedCollections[collectionName] = true
+		}
+	}
+
+	return tx.Commit()
+}
+
+// GetRuleByCollection retrieves a single rule from container_rules by collection name
+func (r *Repo) GetRuleByCollection(collectionName string) (ContainerRule, error) {
+	var ruleJSON string
+	err := r.DB.QueryRow(`
+		SELECT rule FROM container_rules WHERE collection_name = ?
+	`, collectionName).Scan(&ruleJSON)
+
+	if err == sql.ErrNoRows {
+		return ContainerRule{}, fmt.Errorf("no rule found for collection: %s", collectionName)
+	}
+	if err != nil {
+		return ContainerRule{}, err
+	}
+
+	var rule ContainerRule
+	if err := json.Unmarshal([]byte(ruleJSON), &rule); err != nil {
+		return ContainerRule{}, fmt.Errorf("failed to unmarshal rule: %v", err)
+	}
+
+	return rule, nil
+}
+
+// UpdateRuleWithVerdict updates a rule in container_rules with a new verdict value
+func (r *Repo) UpdateRuleWithVerdict(collectionName string, key string, value string) error {
+	// Get existing rule
+	rule, err := r.GetRuleByCollection(collectionName)
+	if err != nil {
+		// If rule doesn't exist, create a new one
+		if strings.Contains(err.Error(), "no rule found") {
+			rule = ContainerRule{
+				Name: collectionName,
+				DNS: DNSRule{
+					DomainList: DomainList{
+						Allowed: []string{},
+						Denied:  []string{},
+					},
+				},
+				Processes: ProcessRule{
+					AllowedList: []string{},
+					DeniedList:  DeniedList{Paths: []string{}},
+				},
+			}
+		} else {
+			return err
+		}
+	}
+
+	// Update the rule based on the key type
+	switch key {
+	case "dns_queries":
+		// Check if domain already exists in allowed list
+		if !slices.Contains(rule.DNS.DomainList.Allowed, value) {
+			rule.DNS.DomainList.Allowed = append(rule.DNS.DomainList.Allowed, value)
+			fmt.Printf("Added DNS allowed: %s to collection %s\n", value, collectionName)
+		}
+	case "processes", "process":
+		// Check if process already exists in allowed list
+		if !slices.Contains(rule.Processes.AllowedList, value) {
+			rule.Processes.AllowedList = append(rule.Processes.AllowedList, value)
+			fmt.Printf("Added process allowed: %s to collection %s\n", value, collectionName)
+		}
+	default:
+		return fmt.Errorf("unknown key type: %s", key)
+	}
+
+	// Marshal the updated rule back to JSON
+	ruleJSON, err := json.Marshal(rule)
+	if err != nil {
+		return fmt.Errorf("failed to marshal rule: %v", err)
+	}
+
+	// Update in database
+	_, err = r.DB.Exec(`
+		INSERT OR REPLACE INTO container_rules (collection_name, rule)
+		VALUES (?, ?)
+	`, collectionName, string(ruleJSON))
+
+	if err != nil {
+		return fmt.Errorf("failed to update rule: %v", err)
+	}
+
+	return nil
+}
+
+// GetAllRules retrieves all rules from container_rules table
+func (r *Repo) GetAllRules() ([]ContainerRule, error) {
+	rows, err := r.DB.Query(`
+		SELECT rule FROM container_rules
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var rules []ContainerRule
+	for rows.Next() {
+		var ruleJSON string
+		if err := rows.Scan(&ruleJSON); err != nil {
+			return nil, err
+		}
+
+		var rule ContainerRule
+		if err := json.Unmarshal([]byte(ruleJSON), &rule); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal rule: %v", err)
+		}
+		rules = append(rules, rule)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return rules, nil
 }
