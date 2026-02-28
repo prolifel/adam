@@ -24,11 +24,15 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/container/fetch/profile", fetchProfile(service))
-	mux.HandleFunc("/container/fetch-policies", fetchPolicies(service))
-	mux.HandleFunc("/host/fetch-policies", fetchHostPolicies(service))
-	mux.HandleFunc("/send-verdict", sendVerdict(service))
-	mux.HandleFunc("/update-verdict", updateVerdict(service))
+	// container endpoints
+	mux.HandleFunc("/profile/container/fetch", fetchProfile(service))
+	mux.HandleFunc("/profile/container/policy", fetchPolicies(service))
+
+	// host endpoints
+	mux.HandleFunc("/profile/host/fetch", fetchHostPolicies(service))
+
+	mux.HandleFunc("/verdict/send", sendVerdict(service))
+	mux.HandleFunc("/verdict/update", updateVerdict(service))
 
 	// Health check endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -38,11 +42,11 @@ func main() {
 
 	fmt.Println("Server starting on :8080")
 	fmt.Println("Endpoints:")
-	fmt.Println("  GET  /container/fetch/profile - Fetch and save container profiles")
-	fmt.Println("  GET  /container/fetch-policies - Fetch and save runtime container policies")
-	fmt.Println("  GET  /host/fetch-policies - Fetch and save runtime host policies")
-	fmt.Println("  GET  /send-verdict - Send verdict email with CSV")
-	fmt.Println("  POST /update-verdict - Update verdicts from CSV file")
+	fmt.Println("  GET  /profile/container/fetch - Fetch and save container profiles")
+	fmt.Println("  GET  /profile/container/policy - Fetch and save runtime container policies")
+	fmt.Println("  GET  /profile/host/fetch - Fetch and save runtime host policies")
+	fmt.Println("  GET  /verdict/send - Send verdict email with CSV")
+	fmt.Println("  POST /verdict/update - Update verdicts from CSV file")
 	fmt.Println("  GET  /health - Health check")
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
