@@ -72,6 +72,27 @@ func (s *Service) FetchAndSavePolicies() error {
 	return nil
 }
 
+func (s *Service) FetchAndSaveHostPolicies() error {
+	token, err := login(s.Cfg.AccessKeyId, s.Cfg.SecretAccessKey)
+	if err != nil {
+		return fmt.Errorf("login failed: %v", err)
+	}
+
+	policy, err := getAllRuntimeHostPolicies(token)
+	if err != nil {
+		return fmt.Errorf("failed to get host policies: %v", err)
+	}
+
+	// Save policies to database
+	err = s.Repo.SaveHostRules(policy)
+	if err != nil {
+		return fmt.Errorf("failed to save host policies: %v", err)
+	}
+
+	fmt.Printf("Successfully saved data from host policy %s with %d rules to database\n", policy.ID, len(policy.Rules))
+	return nil
+}
+
 func (s *Service) PushVerdictToPrismaCloud(verdicts []CapabilitiesCSVHeader) (int, error) {
 	// Filter only legitimate verdicts
 	var legitimateVerdicts []CapabilitiesCSVHeader

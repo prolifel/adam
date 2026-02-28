@@ -197,3 +197,43 @@ func getAllRuntimeContainerPolicies(token string) (ContainerPolicy, error) {
 	fmt.Printf("Successfully fetched runtime container policy with %d rules\n", len(policy.Rules))
 	return policy, nil
 }
+
+func getAllRuntimeHostPolicies(token string) (HostPolicy, error) {
+	var policy HostPolicy
+
+	url := fmt.Sprintf("%s/policies/runtime/host", BASE_URL)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Printf("Error creating request: %v\n", err)
+		return policy, err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("x-prisma-cloud-target-env", `{"permission":"policyRuntimeHosts"}`)
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error fetching runtime host policies: %v\n", err)
+		return policy, err
+	}
+	defer res.Body.Close()
+
+	resp, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("Error reading response: %v\n", err)
+		return policy, err
+	}
+
+	err = json.Unmarshal(resp, &policy)
+	if err != nil {
+		fmt.Printf("Error unmarshaling response: %v\n", err)
+		return policy, err
+	}
+
+	fmt.Printf("Successfully fetched runtime host policy with %d rules\n", len(policy.Rules))
+	return policy, nil
+}

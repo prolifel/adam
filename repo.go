@@ -394,3 +394,70 @@ func (r *Repo) GetAllRules() ([]ContainerRule, error) {
 
 	return rules, nil
 }
+
+func (r *Repo) SaveHostRules(policy HostPolicy) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`
+		INSERT OR REPLACE INTO host_rules (collection_name, rule)
+		VALUES (?, ?)
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	// Track which collections we've already saved to avoid duplicates
+	savedCollections := make(map[string]bool)
+
+	// If no rules, nothing to save
+	if len(policy.Rules) == 0 {
+		return tx.Commit()
+	}
+
+	// Iterate over rules and extract collection names
+	for _, rule := range policy.Rules {
+		// If no collections defined, use rule name as collection name
+		if len(rule.Collections) == 0 {
+			if rule.Name != "" && !savedCollections[rule.Name] {
+				ruleJSON, err := json.Marshal(rule)
+				if err != nil {
+					return err
+				}
+				_, err = stmt.Exec(rule.Name, string(ruleJSON))
+				if err != nil {
+					return err
+				}
+				savedCollections[rule.Name] = true
+			}
+			continue
+		}
+
+		// Save each collection for this rule
+		for _, collection := range rule.Collections {
+			collectionName := collection.Name
+			if collectionName == "" || collectionName == "Host - Alert on All Hosts" || collectionName == "All" {
+				continue
+			}
+			if savedCollections[collectionName] {
+				continue
+			}
+
+			ruleJSON, err := json.Marshal(rule)
+			if err != nil {
+				return err
+			}
+			_, err = stmt.Exec(collectionName, string(ruleJSON))
+			if err != nil {
+				return err
+			}
+			savedCollections[collectionName] = true
+		}
+	}
+
+	return tx.Commit()
+}

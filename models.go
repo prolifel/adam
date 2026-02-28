@@ -226,6 +226,105 @@ type ContainerRule struct {
 	WildFireAnalysisEffect         string         `json:"wildFireAnalysis,omitempty"`
 }
 
+// HostPolicy represents the Prisma Cloud Runtime Host Policy
+type HostPolicy struct {
+	ID    string    `json:"_id,omitempty"`
+	Owner string    `json:"owner,omitempty"`
+	Rules []HostRule `json:"rules"`
+}
+
+// HostRule represents a rule within the host runtime policy
+type HostRule struct {
+	AntiMalware         HostAntiMalwareRule      `json:"antiMalware,omitempty"`
+	Collections         []Collection             `json:"collections"`
+	CustomRules         []CustomRule             `json:"customRules"`
+	Disabled            bool                     `json:"disabled"`
+	DNS                 HostDNSRule              `json:"dns,omitempty"`
+	FileIntegrityRules  []HostFileIntegrityRule `json:"fileIntegrityRules,omitempty"`
+	Forensic            HostForensicSettings     `json:"forensic,omitempty"`
+	LogInspectionRules  []HostLogInspectionRule `json:"logInspectionRules,omitempty"`
+	Modified            string                   `json:"modified,omitempty"`
+	Name                string                   `json:"name,omitempty"`
+	Network             HostNetworkRule          `json:"network,omitempty"`
+	Notes               string                   `json:"notes,omitempty"`
+	Owner               string                   `json:"owner,omitempty"`
+	PreviousName        string                   `json:"previousName,omitempty"`
+}
+
+// HostAntiMalwareRule represents restrictions/suppression for suspected anti-malware
+type HostAntiMalwareRule struct {
+	AllowedProcesses             []string `json:"allowedProcesses,omitempty"`
+	CryptoMiner                  string   `json:"cryptoMiner,omitempty"`
+	CustomFeed                  string   `json:"customFeed,omitempty"`
+	DeniedProcesses             DeniedList  `json:"deniedProcesses,omitempty"`
+	DetectCompilerGeneratedBinary bool    `json:"detectCompilerGeneratedBinary"`
+	EncryptedBinaries           string   `json:"encryptedBinaries,omitempty"`
+	ExecutionFlowHijack         string   `json:"executionFlowHijack,omitempty"`
+	IntelligenceFeed            string   `json:"intelligenceFeed,omitempty"`
+	ReverseShell                string   `json:"reverseShell,omitempty"`
+	ServiceUnknownOriginBinary  string   `json:"serviceUnknownOriginBinary,omitempty"`
+	SkipSSHTracking             bool     `json:"skipSSHTracking"`
+	SuspiciousELFHeaders        string   `json:"suspiciousELFHeaders,omitempty"`
+	TempFSProc                 string   `json:"tempFSProc,omitempty"`
+	UserUnknownOriginBinary     string   `json:"userUnknownOriginBinary,omitempty"`
+	WebShell                    string   `json:"webShell,omitempty"`
+	WildFireAnalysis            string   `json:"wildFireAnalysis,omitempty"`
+}
+
+// HostDNSRule represents a host DNS runtime rule
+type HostDNSRule struct {
+	Allow          []string `json:"allow,omitempty"`
+	Deny           []string `json:"deny,omitempty"`
+	DenyListEffect string   `json:"denyListEffect,omitempty"`
+	IntelligenceFeed string `json:"intelligenceFeed,omitempty"`
+}
+
+// HostNetworkRule represents the restrictions/suppression for host networking
+type HostNetworkRule struct {
+	AllowedOutboundIPs   []string       `json:"allowedOutboundIPs,omitempty"`
+	CustomFeed           string         `json:"customFeed,omitempty"`
+	DeniedListeningPorts []PortRange    `json:"deniedListeningPorts,omitempty"`
+	DeniedOutboundIPs    []string       `json:"deniedOutboundIPs,omitempty"`
+	DeniedOutboundPorts  []PortRange    `json:"deniedOutboundPorts,omitempty"`
+	DenyListEffect       string         `json:"denyListEffect,omitempty"`
+	IntelligenceFeed     string         `json:"intelligenceFeed,omitempty"`
+}
+
+// PortRange represents a range of ports
+type PortRange struct {
+	Deny  bool `json:"deny"`
+	End   int  `json:"end,omitempty"`
+	Start int  `json:"start,omitempty"`
+}
+
+// HostFileIntegrityRule represents file integrity monitoring rules
+type HostFileIntegrityRule struct {
+	Dir          bool     `json:"dir"`
+	Exclusions   []string `json:"exclusions,omitempty"`
+	Metadata     bool     `json:"metadata"`
+	Path         string   `json:"path,omitempty"`
+	ProcWhitelist []string `json:"procWhitelist,omitempty"`
+	Read         bool     `json:"read"`
+	Recursive    bool     `json:"recursive"`
+	Write        bool     `json:"write"`
+}
+
+// HostForensicSettings indicates how to perform host forensic
+type HostForensicSettings struct {
+	ActivitiesDisabled    bool `json:"activitiesDisabled"`
+	DockerEnabled        bool `json:"dockerEnabled"`
+	ReadonlyDockerEnabled bool `json:"readonlyDockerEnabled"`
+	ServiceActivitiesEnabled bool `json:"serviceActivitiesEnabled"`
+	SshdEnabled          bool `json:"sshdEnabled"`
+	SudoEnabled          bool `json:"sudoEnabled"`
+}
+
+// HostLogInspectionRule represents log inspection rules
+type HostLogInspectionRule struct {
+	Path  string   `json:"path,omitempty"`
+	Regex []string `json:"regex,omitempty"`
+}
+
 // Collection represents a collection within a rule - full Prisma Cloud schema
 type Collection struct {
 	AccountIDs  []string `json:"accountIDs"`
