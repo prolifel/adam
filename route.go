@@ -275,3 +275,37 @@ func fetchHostPolicies(service *Service) http.HandlerFunc {
 		w.Write(res)
 	}
 }
+
+func fetchHostProfile(service *Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		err := validateToken(r, service.Cfg.Token)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		err = service.FetchAndSaveHostProfiles()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to fetch host profiles: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+
+		resp := Response{
+			Message: "Host profiles fetched and saved successfully!",
+		}
+
+		res, err := json.Marshal(resp)
+		if err != nil {
+			return
+		}
+
+		w.Write(res)
+	}
+}

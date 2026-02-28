@@ -29,7 +29,8 @@ func main() {
 	mux.HandleFunc("/policy/container", fetchPolicies(service))
 
 	// host endpoints
-	mux.HandleFunc("/profile/host", fetchHostPolicies(service))
+	mux.HandleFunc("/profile/host", fetchHostProfile(service))
+	mux.HandleFunc("/policy/host", fetchHostPolicies(service))
 
 	mux.HandleFunc("/verdict/send", sendVerdict(service))
 	mux.HandleFunc("/verdict/update", updateVerdict(service))
@@ -43,8 +44,9 @@ func main() {
 	fmt.Println("Server starting on :8080")
 	fmt.Println("Endpoints:")
 	fmt.Println("  GET  /profile/container - Fetch and save container profiles")
+	fmt.Println("  GET  /profile/host - Fetch and save runtime host profiles")
 	fmt.Println("  GET  /policy/container - Fetch and save runtime container policies")
-	fmt.Println("  GET  /profile/host - Fetch and save runtime host policies")
+	fmt.Println("  GET  /policy/host - Fetch and save runtime host policies")
 	fmt.Println("  GET  /verdict/send - Send verdict email with CSV")
 	fmt.Println("  POST /verdict/update - Update verdicts from CSV file")
 	fmt.Println("  GET  /health - Health check")

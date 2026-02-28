@@ -176,6 +176,74 @@ type ProcessEntry struct {
 	User        string `json:"user,omitempty"`
 }
 
+// HostProfile represents the runtime host profile from Prisma Cloud
+type HostProfile struct {
+	ID          string              `json:"_id"`
+	AccountID   string              `json:"accountID"`
+	Apps        []HostApp           `json:"apps"`
+	Collections []string            `json:"collections"`
+	Created     string              `json:"created"`
+	GeoIP       ProfileNetworkGeoIP `json:"geoip"`
+	Hash        int64               `json:"hash"`
+	Labels      []string            `json:"labels"`
+	SSHEvents   []SSHEvent          `json:"sshEvents"`
+	Time        string              `json:"time"`
+}
+
+// HostApp represents an app on the host
+type HostApp struct {
+	ListeningPorts []HostListeningPort `json:"listeningPorts"`
+	Name           string              `json:"name"`
+	OutgoingPorts  []HostOutgoingPort  `json:"outgoingPorts"`
+	Processes      []HostProcess       `json:"processes"`
+	StartupProcess *HostProcess        `json:"startupProcess"`
+}
+
+// HostListeningPort represents a listening port on the host
+type HostListeningPort struct {
+	Command     string `json:"command"`
+	Modified    string `json:"modified"`
+	Port        int    `json:"port"`
+	ProcessPath string `json:"processPath"`
+}
+
+// HostOutgoingPort represents an outgoing port on the host
+type HostOutgoingPort struct {
+	Command     string `json:"command"`
+	Country     string `json:"country"`
+	IP          string `json:"ip"`
+	Modified    string `json:"modified"`
+	Port        int    `json:"port"`
+	ProcessPath string `json:"processPath"`
+}
+
+// HostProcess represents a process on the host
+type HostProcess struct {
+	Command     string `json:"command"`
+	Interactive bool   `json:"interactive"`
+	MD5         string `json:"md5"`
+	Modified    bool   `json:"modified"`
+	Path        string `json:"path"`
+	PPath       string `json:"ppath"`
+	Time        string `json:"time"`
+	User        string `json:"user"`
+}
+
+// SSHEvent represents an SSH event on the host
+type SSHEvent struct {
+	Command     string `json:"command"`
+	Country     string `json:"country"`
+	Interactive bool   `json:"interactive"`
+	IP          int    `json:"ip"`
+	LoginTime   int64  `json:"loginTime"`
+	MD5         string `json:"md5"`
+	Modified    bool   `json:"modified"`
+	Path        string `json:"path"`
+	PPath       string `json:"ppath"`
+	Time        string `json:"time"`
+	User        string `json:"user"`
+}
+
 type VerdictRecord struct {
 	ID             int
 	CollectionName string
@@ -426,4 +494,12 @@ type CustomRule struct {
 	ID     int    `json:"_id,omitempty"`
 	Effect string `json:"effect,omitempty"`
 	Action string `json:"action,omitempty"`
+}
+
+// HostProfileRecord represents a single host profile record for database storage
+type HostProfileRecord struct {
+	HostID         string
+	CollectionName string
+	Key            string
+	Value          string
 }
