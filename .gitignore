@@ -31,3 +31,5 @@ go.work
 **/*.csv
 crontab
 adam
+
+*.md
