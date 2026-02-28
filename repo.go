@@ -101,6 +101,32 @@ func (r *Repo) SaveProfiles(profiles []ContainerProfile) error {
 	return tx.Commit()
 }
 
+func (r *Repo) SaveHostProfileRecords(records []HostProfileRecord) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`
+		INSERT OR IGNORE INTO host_profiles (host_id, collection_name, key, value, created_at)
+		VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, record := range records {
+		_, err := stmt.Exec(record.HostID, record.CollectionName, record.Key, record.Value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func (r *Repo) ExportNotYetVerdict() (string, error) {
 	// Query records with "not_yet" verdict
 	rows, err := r.DB.Query(`

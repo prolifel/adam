@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Service struct {
@@ -90,6 +91,108 @@ func (s *Service) FetchAndSaveHostPolicies() error {
 	}
 
 	fmt.Printf("Successfully saved data from host policy %s with %d rules to database\n", policy.ID, len(policy.Rules))
+	return nil
+}
+
+func (s *Service) FetchAndSaveHostProfiles() error {
+	token, err := login(s.Cfg.AccessKeyId, s.Cfg.SecretAccessKey)
+	if err != nil {
+		return fmt.Errorf("login failed: %v", err)
+	}
+
+	profiles, err := getRuntimeHostProfile(token)
+	if err != nil {
+		return fmt.Errorf("failed to get host profiles: %v", err)
+	}
+
+	// Transform profiles into records with business logic
+	var records []HostProfileRecord
+	for _, profile := range profiles {
+		// Filter collections to exclude "All"
+		collections := []string{}
+		for _, col := range profile.Collections {
+			if strings.ToLower(col) != "all" {
+				collections = append(collections, col)
+			}
+		}
+
+		// Skip if no valid collections
+		if len(collections) == 0 {
+			continue
+		}
+
+		for _, collection := range collections {
+			// Process SSH events
+			for _, ssh := range profile.SSHEvents {
+				if ssh.Command != "" {
+					value := fmt.Sprintf("command=%s,user=%s,ip=%d", ssh.Command, ssh.User, ssh.IP)
+					records = append(records, HostProfileRecord{
+						HostID:        profile.ID,
+						CollectionName: collection,
+						Key:           "ssh_event",
+						Value:         value,
+					})
+				}
+			}
+
+			// Process app processes
+			for _, app := range profile.Apps {
+				// Save startup process
+				if app.StartupProcess != nil && app.StartupProcess.Path != "" {
+					records = append(records, HostProfileRecord{
+						HostID:        profile.ID,
+						CollectionName: collection,
+						Key:           "process",
+						Value:         app.StartupProcess.Path,
+					})
+				}
+
+				// Save app processes
+				for _, proc := range app.Processes {
+					if proc.Path != "" {
+						records = append(records, HostProfileRecord{
+							HostID:        profile.ID,
+							CollectionName: collection,
+							Key:           "process",
+							Value:         proc.Path,
+						})
+					}
+				}
+
+				// Save listening ports
+				for _, lp := range app.ListeningPorts {
+					if lp.Port > 0 {
+						records = append(records, HostProfileRecord{
+							HostID:        profile.ID,
+							CollectionName: collection,
+							Key:           "listening_port",
+							Value:         fmt.Sprintf("%d", lp.Port),
+						})
+					}
+				}
+
+				// Save outgoing ports
+				for _, op := range app.OutgoingPorts {
+					if op.Port > 0 {
+						records = append(records, HostProfileRecord{
+							HostID:        profile.ID,
+							CollectionName: collection,
+							Key:           "outgoing_port",
+							Value:         fmt.Sprintf("%d", op.Port),
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// Save records to database
+	err = s.Repo.SaveHostProfileRecords(records)
+	if err != nil {
+		return fmt.Errorf("failed to save host profiles: %v", err)
+	}
+
+	fmt.Printf("Successfully saved data from %d host profiles to database\n", len(profiles))
 	return nil
 }
 
