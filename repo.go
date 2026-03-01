@@ -76,6 +76,29 @@ func (r *Repo) SaveProfiles(profiles []ContainerProfile) error {
 				}
 			}
 
+			// Save network static listening ports
+			for _, lp := range profile.Network.Static.ListeningPorts {
+				for _, port := range lp.PortsData.Ports {
+					if port.Port > 0 {
+						value := fmt.Sprintf("%d", port.Port)
+						_, err := stmt.Exec(collection, "listening_port_static", value)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+
+			// Save filesystem static entries
+			for _, fs := range profile.Filesystem.Static {
+				if fs.Path != "" {
+					_, err := stmt.Exec(collection, "filesystem_static", fs.Path)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
 			// Save behavioral processes
 			for _, proc := range profile.Processes.Behavioral {
 				if proc.Path != "" {
