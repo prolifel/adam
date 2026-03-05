@@ -300,3 +300,104 @@ func getAllRuntimeHostPolicies(token string) (HostPolicy, error) {
 	fmt.Printf("Successfully fetched runtime host policy with %d rules\n", len(policy.Rules))
 	return policy, nil
 }
+
+func getAppEmbeddedProfile(token string) (profiles []AppEmbeddedProfile, err error) {
+	const limit = 100
+	offset := 0
+	allProfiles := []AppEmbeddedProfile{}
+
+	for {
+		url := fmt.Sprintf("%s/profiles/app-embedded", BASE_URL)
+
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			fmt.Printf("Error creating request at offset %d: %v\n", offset, err)
+			return allProfiles, nil
+		}
+
+		q := req.URL.Query()
+		q.Add("limit", fmt.Sprintf("%d", limit))
+		q.Add("offset", fmt.Sprintf("%d", offset))
+		req.URL.RawQuery = q.Encode()
+
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Accept", "application/json")
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Add("x-prisma-cloud-target-env", `{"permission":"monitorRuntimeServerless"}`)
+
+		res, err := client.Do(req)
+		if err != nil {
+			fmt.Printf("Error fetching app-embedded profiles at offset %d: %v\n", offset, err)
+			return allProfiles, nil
+		}
+
+		resp, err := io.ReadAll(res.Body)
+		res.Body.Close()
+		if err != nil {
+			fmt.Printf("Error reading response at offset %d: %v\n", offset, err)
+			return allProfiles, nil
+		}
+
+		var batchProfiles []AppEmbeddedProfile
+		err = json.Unmarshal(resp, &batchProfiles)
+		if err != nil {
+			fmt.Printf("Error unmarshaling response at offset %d: %v\n", offset, err)
+			return allProfiles, nil
+		}
+
+		allProfiles = append(allProfiles, batchProfiles...)
+
+		fmt.Printf("Fetched %d app-embedded profiles (total: %d)\n", len(batchProfiles), len(allProfiles))
+
+		if len(batchProfiles) < limit {
+			fmt.Println("Reached end of app-embedded profiles")
+			break
+		}
+
+		offset += limit
+	}
+
+	return allProfiles, nil
+}
+
+func getAppEmbeddedPolicy(token string) (AppEmbeddedPolicy, error) {
+	var policy AppEmbeddedPolicy
+
+	url := fmt.Sprintf("%s/policies/runtime/app-embedded", BASE_URL)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Printf("Error creating request: %v\n", err)
+		return policy, err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("x-prisma-cloud-target-env", `{"permission":"policyRuntimeServerless"}`)
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error fetching app-embedded policy: %v\n", err)
+		return policy, err
+	}
+	defer res.Body.Close()
+
+	resp, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("Error reading response: %v\n", err)
+		return policy, err
+	}
+
+	err = json.Unmarshal(resp, &policy)
+	if err != nil {
+		fmt.Printf("Error unmarshaling response: %v\n", err)
+		return policy, err
+	}
+
+	fmt.Printf("Successfully fetched app-embedded policy with %d rules\n", len(policy.Rules))
+
+	return policy, nil
+}

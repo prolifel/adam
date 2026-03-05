@@ -503,3 +503,77 @@ type HostProfileRecord struct {
 	Key            string
 	Value          string
 }
+
+// AppEmbeddedProfileRecord represents a single app-embedded profile record for database storage
+type AppEmbeddedProfileRecord struct {
+	ProfileID      string
+	AppID          string
+	CollectionName string
+	Key            string
+	Value          string
+}
+
+// AppEmbeddedProfile represents an app-embedded runtime profile from Prisma Cloud
+type AppEmbeddedProfile struct {
+	ID            string        `json:"_id"`
+	AppID         string        `json:"appID"`
+	CloudMetadata CloudMetadata `json:"cloudMetadata,omitempty"`
+	Cluster       string        `json:"cluster,omitempty"`
+	ClusterType   string        `json:"clusterType,omitempty"`
+	Collections   []string      `json:"collections"`
+	Container     string        `json:"container,omitempty"`
+	Image         string        `json:"image,omitempty"`
+	ImageID       string        `json:"imageID,omitempty"`
+	StartTime     string        `json:"startTime,omitempty"`
+}
+
+// CloudMetadata represents cloud provider metadata
+type CloudMetadata struct {
+	AccountID  string     `json:"accountID,omitempty"`
+	Provider   string     `json:"provider,omitempty"`
+	Region     string     `json:"region,omitempty"`
+	ResourceID string     `json:"resourceID,omitempty"`
+	Name       string     `json:"name,omitempty"`
+	Labels     []KeyValue `json:"labels,omitempty"`
+}
+
+// KeyValue represents a label key-value pair
+type KeyValue struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+// AppEmbeddedPolicy represents the app-embedded runtime policy
+type AppEmbeddedPolicy struct {
+	ID    string            `json:"_id,omitempty"`
+	Rules []AppEmbeddedRule `json:"rules"`
+}
+
+// AppEmbeddedRule represents a rule within the app-embedded runtime policy
+type AppEmbeddedRule struct {
+	AdvancedProtection bool                   `json:"advancedProtection"`
+	Collections        []Collection           `json:"collections"`
+	CustomRules        []CustomRule           `json:"customRules"`
+	Disabled           bool                   `json:"disabled"`
+	DNS                DNSRule                `json:"dns,omitempty"`
+	Filesystem         FileSystemRule         `json:"filesystem,omitempty"`
+	Modified           string                 `json:"modified,omitempty"`
+	Name               string                 `json:"name,omitempty"`
+	Network            NetworkRule            `json:"network,omitempty"`
+	Notes              string                 `json:"notes,omitempty"`
+	Owner              string                 `json:"owner,omitempty"`
+	PreviousName       string                 `json:"previousName,omitempty"`
+	Processes          AppEmbeddedProcessRule `json:"processes,omitempty"`
+	WildFireAnalysis   string                 `json:"wildFireAnalysis,omitempty"`
+}
+
+type AppEmbeddedProcessRule struct {
+	Blacklist           []string `json:"blacklist,omitempty"`
+	BlockAllBinaries    bool     `json:"blockAllBinaries,omitempty"`
+	CheckCryptoMiners   bool     `json:"checkCryptoMiners,omitempty"`
+	CheckLateralMovement bool    `json:"checkLateralMovement,omitempty"`
+	CheckNewBinaries    bool     `json:"checkNewBinaries,omitempty"`
+	Effect              string   `json:"effect,omitempty"`
+	SkipModified        bool     `json:"skipModified,omitempty"`
+	Whitelist           []string `json:"whitelist,omitempty"`
+}

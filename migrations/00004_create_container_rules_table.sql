@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-DROP TABLE IF EXISTS container_policies;
+DROP TABLE IF EXISTS container_rules;
 
 CREATE TABLE IF NOT EXISTS container_rules (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

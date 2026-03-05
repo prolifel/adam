@@ -32,6 +32,10 @@ func main() {
 	mux.HandleFunc("/profile/host", fetchHostProfile(service))
 	mux.HandleFunc("/policy/host", fetchHostPolicies(service))
 
+	// app-embedded endpoints
+	mux.HandleFunc("/profile/app-embedded", fetchAppEmbeddedProfile(service))
+	mux.HandleFunc("/policy/app-embedded", fetchAppEmbeddedPolicies(service))
+
 	mux.HandleFunc("/verdict/send", sendVerdict(service))
 	mux.HandleFunc("/verdict/update", updateVerdict(service))
 
@@ -45,8 +49,10 @@ func main() {
 	fmt.Println("Endpoints:")
 	fmt.Println("  GET  /profile/container - Fetch and save container profiles")
 	fmt.Println("  GET  /profile/host - Fetch and save runtime host profiles")
+	fmt.Println("  GET  /profile/app-embedded - Fetch and save app-embedded profiles")
 	fmt.Println("  GET  /policy/container - Fetch and save runtime container policies")
 	fmt.Println("  GET  /policy/host - Fetch and save runtime host policies")
+	fmt.Println("  GET  /policy/app-embedded - Fetch and save app-embedded policies")
 	fmt.Println("  GET  /verdict/send - Send verdict email with CSV")
 	fmt.Println("  POST /verdict/update - Update verdicts from CSV file")
 	fmt.Println("  GET  /health - Health check")

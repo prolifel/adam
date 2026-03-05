@@ -123,27 +123,28 @@ func (s *Service) FetchAndSaveHostProfiles() error {
 
 		for _, collection := range collections {
 			// Process SSH events
-			for _, ssh := range profile.SSHEvents {
-				if ssh.Command != "" {
-					value := fmt.Sprintf("command=%s,user=%s,ip=%d", ssh.Command, ssh.User, ssh.IP)
-					records = append(records, HostProfileRecord{
-						HostID:        profile.ID,
-						CollectionName: collection,
-						Key:           "ssh_event",
-						Value:         value,
-					})
-				}
-			}
+			// NOTE: sekarang masih belum perlu
+			// for _, ssh := range profile.SSHEvents {
+			// 	if ssh.Command != "" {
+			// 		value := fmt.Sprintf("command=%s,user=%s,ip=%d", ssh.Command, ssh.User, ssh.IP)
+			// 		records = append(records, HostProfileRecord{
+			// 			HostID:        profile.ID,
+			// 			CollectionName: collection,
+			// 			Key:           "ssh_event",
+			// 			Value:         value,
+			// 		})
+			// 	}
+			// }
 
 			// Process app processes
 			for _, app := range profile.Apps {
 				// Save startup process
 				if app.StartupProcess != nil && app.StartupProcess.Path != "" {
 					records = append(records, HostProfileRecord{
-						HostID:        profile.ID,
+						HostID:         profile.ID,
 						CollectionName: collection,
-						Key:           "process",
-						Value:         app.StartupProcess.Path,
+						Key:            "process",
+						Value:          app.StartupProcess.Path,
 					})
 				}
 
@@ -151,10 +152,10 @@ func (s *Service) FetchAndSaveHostProfiles() error {
 				for _, proc := range app.Processes {
 					if proc.Path != "" {
 						records = append(records, HostProfileRecord{
-							HostID:        profile.ID,
+							HostID:         profile.ID,
 							CollectionName: collection,
-							Key:           "process",
-							Value:         proc.Path,
+							Key:            "process",
+							Value:          proc.Path,
 						})
 					}
 				}
@@ -163,10 +164,10 @@ func (s *Service) FetchAndSaveHostProfiles() error {
 				for _, lp := range app.ListeningPorts {
 					if lp.Port > 0 {
 						records = append(records, HostProfileRecord{
-							HostID:        profile.ID,
+							HostID:         profile.ID,
 							CollectionName: collection,
-							Key:           "listening_port",
-							Value:         fmt.Sprintf("%d", lp.Port),
+							Key:            "listening_port",
+							Value:          fmt.Sprintf("%d", lp.Port),
 						})
 					}
 				}
@@ -175,10 +176,10 @@ func (s *Service) FetchAndSaveHostProfiles() error {
 				for _, op := range app.OutgoingPorts {
 					if op.Port > 0 {
 						records = append(records, HostProfileRecord{
-							HostID:        profile.ID,
+							HostID:         profile.ID,
 							CollectionName: collection,
-							Key:           "outgoing_port",
-							Value:         fmt.Sprintf("%d", op.Port),
+							Key:            "outgoing_port",
+							Value:          fmt.Sprintf("%d", op.Port),
 						})
 					}
 				}
@@ -193,6 +194,151 @@ func (s *Service) FetchAndSaveHostProfiles() error {
 	}
 
 	fmt.Printf("Successfully saved data from %d host profiles to database\n", len(profiles))
+	return nil
+}
+
+func (s *Service) FetchAndSaveAppEmbeddedProfiles() error {
+	token, err := login(s.Cfg.AccessKeyId, s.Cfg.SecretAccessKey)
+	if err != nil {
+		return fmt.Errorf("login failed: %v", err)
+	}
+
+	profiles, err := getAppEmbeddedProfile(token)
+	if err != nil {
+		return fmt.Errorf("failed to get app-embedded profiles: %v", err)
+	}
+
+	// Transform profiles into records
+	var records []AppEmbeddedProfileRecord
+	for _, profile := range profiles {
+		// If no collections, skip
+		if len(profile.Collections) == 0 {
+			continue
+		}
+
+		// Save profile_id for each collection
+		for _, collection := range profile.Collections {
+			// Skip "All" collection
+			if collection == "All" {
+				continue
+			}
+
+			// Save profile_id as key
+			records = append(records, AppEmbeddedProfileRecord{
+				ProfileID:     profile.ID,
+				AppID:         profile.AppID,
+				CollectionName: collection,
+				Key:           "profile_id",
+				Value:         profile.ID,
+			})
+
+			// Save app_id if present
+			if profile.AppID != "" {
+				records = append(records, AppEmbeddedProfileRecord{
+					ProfileID:     profile.ID,
+					AppID:         profile.AppID,
+					CollectionName: collection,
+					Key:           "app_id",
+					Value:         profile.AppID,
+				})
+			}
+
+			// Save cluster if present
+			if profile.Cluster != "" {
+				records = append(records, AppEmbeddedProfileRecord{
+					ProfileID:     profile.ID,
+					AppID:         profile.AppID,
+					CollectionName: collection,
+					Key:           "cluster",
+					Value:         profile.Cluster,
+				})
+			}
+
+			// Save container if present
+			if profile.Container != "" {
+				records = append(records, AppEmbeddedProfileRecord{
+					ProfileID:     profile.ID,
+					AppID:         profile.AppID,
+					CollectionName: collection,
+					Key:           "container",
+					Value:         profile.Container,
+				})
+			}
+
+			// Save image if present
+			if profile.Image != "" {
+				records = append(records, AppEmbeddedProfileRecord{
+					ProfileID:     profile.ID,
+					AppID:         profile.AppID,
+					CollectionName: collection,
+					Key:           "image",
+					Value:         profile.Image,
+				})
+			}
+
+			// Save imageID if present
+			if profile.ImageID != "" {
+				records = append(records, AppEmbeddedProfileRecord{
+					ProfileID:     profile.ID,
+					AppID:         profile.AppID,
+					CollectionName: collection,
+					Key:           "image_id",
+					Value:         profile.ImageID,
+				})
+			}
+
+			// Save startTime if present
+			if profile.StartTime != "" {
+				records = append(records, AppEmbeddedProfileRecord{
+					ProfileID:     profile.ID,
+					AppID:         profile.AppID,
+					CollectionName: collection,
+					Key:           "start_time",
+					Value:         profile.StartTime,
+				})
+			}
+
+			// Save clusterType if present
+			if profile.ClusterType != "" {
+				records = append(records, AppEmbeddedProfileRecord{
+					ProfileID:     profile.ID,
+					AppID:         profile.AppID,
+					CollectionName: collection,
+					Key:           "cluster_type",
+					Value:         profile.ClusterType,
+				})
+			}
+		}
+	}
+
+	// Save records to database
+	err = s.Repo.SaveAppEmbeddedProfiles(records)
+	if err != nil {
+		return fmt.Errorf("failed to save app-embedded profiles: %v", err)
+	}
+
+	fmt.Printf("Successfully saved data from %d app-embedded profiles to database\n", len(profiles))
+	return nil
+}
+
+func (s *Service) FetchAndSaveAppEmbeddedPolicies() error {
+	token, err := login(s.Cfg.AccessKeyId, s.Cfg.SecretAccessKey)
+	if err != nil {
+		return fmt.Errorf("login failed: %v", err)
+	}
+
+	policy, err := getAppEmbeddedPolicy(token)
+	if err != nil {
+		return fmt.Errorf("failed to get app-embedded policies: %v", err)
+	}
+
+	// Save policies to database
+	err = s.Repo.SaveAppEmbeddedRules(policy)
+	if err != nil {
+		return fmt.Errorf("failed to save app-embedded policies: %v", err)
+	}
+
+	fmt.Printf("Successfully saved data from app-embedded policy %s with %d rules to database\n", policy.ID, len(policy.Rules))
 	return nil
 }
 

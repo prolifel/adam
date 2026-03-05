@@ -270,7 +270,7 @@ func (r *Repo) SaveRules(policy ContainerPolicy) error {
 	defer tx.Rollback()
 
 	stmt, err := tx.Prepare(`
-		INSERT OR REPLACE INTO container_rules (collection_name, rule)
+		INSERT OR REPLACE INTO container_policies (collection_name, rule)
 		VALUES (?, ?)
 	`)
 	if err != nil {
@@ -329,11 +329,11 @@ func (r *Repo) SaveRules(policy ContainerPolicy) error {
 	return tx.Commit()
 }
 
-// GetRuleByCollection retrieves a single rule from container_rules by collection name
+// GetRuleByCollection retrieves a single rule from container_policies by collection name
 func (r *Repo) GetRuleByCollection(collectionName string) (ContainerRule, error) {
 	var ruleJSON string
 	err := r.DB.QueryRow(`
-		SELECT rule FROM container_rules WHERE collection_name = ?
+		SELECT rule FROM container_policies WHERE collection_name = ?
 	`, collectionName).Scan(&ruleJSON)
 
 	if err == sql.ErrNoRows {
@@ -351,7 +351,7 @@ func (r *Repo) GetRuleByCollection(collectionName string) (ContainerRule, error)
 	return rule, nil
 }
 
-// UpdateRuleWithVerdict updates a rule in container_rules with a new verdict value
+// UpdateRuleWithVerdict updates a rule in container_policies with a new verdict value
 func (r *Repo) UpdateRuleWithVerdict(collectionName string, key string, value string) error {
 	// Get existing rule
 	rule, err := r.GetRuleByCollection(collectionName)
@@ -402,7 +402,7 @@ func (r *Repo) UpdateRuleWithVerdict(collectionName string, key string, value st
 
 	// Update in database
 	_, err = r.DB.Exec(`
-		INSERT OR REPLACE INTO container_rules (collection_name, rule)
+		INSERT OR REPLACE INTO container_policies (collection_name, rule)
 		VALUES (?, ?)
 	`, collectionName, string(ruleJSON))
 
@@ -413,10 +413,10 @@ func (r *Repo) UpdateRuleWithVerdict(collectionName string, key string, value st
 	return nil
 }
 
-// GetAllRules retrieves all rules from container_rules table
+// GetAllRules retrieves all rules from container_policies table
 func (r *Repo) GetAllRules() ([]ContainerRule, error) {
 	rows, err := r.DB.Query(`
-		SELECT rule FROM container_rules
+		SELECT rule FROM container_policies
 	`)
 	if err != nil {
 		return nil, err
@@ -452,7 +452,7 @@ func (r *Repo) SaveHostRules(policy HostPolicy) error {
 	defer tx.Rollback()
 
 	stmt, err := tx.Prepare(`
-		INSERT OR REPLACE INTO host_rules (collection_name, rule)
+		INSERT OR REPLACE INTO host_policies (collection_name, rule)
 		VALUES (?, ?)
 	`)
 	if err != nil {
@@ -501,6 +501,101 @@ func (r *Repo) SaveHostRules(policy HostPolicy) error {
 				return err
 			}
 			_, err = stmt.Exec(collectionName, string(ruleJSON))
+			if err != nil {
+				return err
+			}
+			savedCollections[collectionName] = true
+		}
+	}
+
+	return tx.Commit()
+}
+
+// SaveAppEmbeddedProfiles saves app-embedded profile records to the database
+func (r *Repo) SaveAppEmbeddedProfiles(records []AppEmbeddedProfileRecord) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`
+		INSERT OR REPLACE INTO app_embedded_profiles (profile_id, app_id, collection_name, key, value)
+		VALUES (?, ?, ?, ?, ?)
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, record := range records {
+		_, err = stmt.Exec(record.ProfileID, record.AppID, record.CollectionName, record.Key, record.Value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+// SaveAppEmbeddedRules saves app-embedded policy rules to the database
+func (r *Repo) SaveAppEmbeddedRules(policy AppEmbeddedPolicy) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`
+		INSERT OR REPLACE INTO app_embedded_policies (policy_id, collection_name, rule)
+		VALUES (?, ?, ?)
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	// Track which collections we've already saved to avoid duplicates
+	savedCollections := make(map[string]bool)
+
+	// If no rules, nothing to save
+	if len(policy.Rules) == 0 {
+		return tx.Commit()
+	}
+
+	// Iterate over rules and extract collection names
+	for _, rule := range policy.Rules {
+		// If no collections defined, use rule name as collection name
+		if len(rule.Collections) == 0 {
+			if rule.Name != "" && !savedCollections[rule.Name] {
+				ruleJSON, err := json.Marshal(rule)
+				if err != nil {
+					return err
+				}
+				_, err = stmt.Exec(policy.ID, rule.Name, string(ruleJSON))
+				if err != nil {
+					return err
+				}
+				savedCollections[rule.Name] = true
+			}
+			continue
+		}
+
+		// Save each collection for this rule
+		for _, collection := range rule.Collections {
+			collectionName := collection.Name
+			if collectionName == "" || collectionName == "All" {
+				continue
+			}
+			if savedCollections[collectionName] {
+				continue
+			}
+
+			ruleJSON, err := json.Marshal(rule)
+			if err != nil {
+				return err
+			}
+			_, err = stmt.Exec(policy.ID, collectionName, string(ruleJSON))
 			if err != nil {
 				return err
 			}
