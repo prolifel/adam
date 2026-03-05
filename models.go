@@ -1,15 +1,17 @@
 package main
 
 type Config struct {
-	AccessKeyId     string `env:"ACCESS_KEY_ID,required"`
-	SecretAccessKey string `env:"SECRET_ACCESS_KEY,required"`
-	SMTPHost        string `env:"SMTP_HOST"`
-	SMTPPort        int    `env:"SMTP_PORT"`
-	SMTPUsername    string `env:"SMTP_USERNAME"`
-	SMTPPassword    string `env:"SMTP_PASSWORD"`
-	EmailFrom       string `env:"EMAIL_FROM"`
-	EmailTo         string `env:"EMAIL_TO"` // Comma-separated email addresses
-	Token           string `env:"TOKEN"`
+	AccessKeyId       string `env:"ACCESS_KEY_ID,required"`
+	SecretAccessKey   string `env:"SECRET_ACCESS_KEY,required"`
+	SMTPHost          string `env:"SMTP_HOST"`
+	SMTPPort          int    `env:"SMTP_PORT"`
+	SMTPUsername      string `env:"SMTP_USERNAME"`
+	SMTPPassword      string `env:"SMTP_PASSWORD"`
+	EmailFrom         string `env:"EMAIL_FROM"`
+	EmailTo           string `env:"EMAIL_TO"` // Comma-separated email addresses
+	Token             string `env:"TOKEN"`
+	ComplianceStandard string `env:"COMPLIANCE_STANDARD"`
+	WeeklyReportTo   string `env:"WEEKLY_REPORT_TO"`
 }
 
 type AuthenticateRequest struct {
@@ -19,6 +21,37 @@ type AuthenticateRequest struct {
 
 type AuthenticateResponse struct {
 	Token string `json:"token"`
+}
+
+// CSPMAlert represents a Prisma Cloud CSPM alert
+type CSPMAlert struct {
+	ID             string `json:"_id"`
+	AlertID        string `json:"id"`
+	Title          string `json:"title"`
+	Severity       string `json:"severity"`
+	Status         string `json:"status"`
+	Resource       string `json:"resource"`
+	Policy         string `json:"policy"`
+	CloudType      string `json:"cloudType"`
+	AccountID      string `json:"accountID"`
+	Region         string `json:"region"`
+	CreatedTime    string `json:"time"`
+	Recommendation string `json:"recommendation,omitempty"`
+}
+
+// AlertCSVRow represents a row in the CSV export
+type AlertCSVRow struct {
+	ID             string
+	Title          string
+	Severity       string
+	Status         string
+	Resource       string
+	Policy         string
+	CloudType      string
+	AccountID      string
+	Region         string
+	CreatedTime    string
+	Recommendation string
 }
 
 type ContainerProfile struct {

@@ -39,6 +39,9 @@ func main() {
 	mux.HandleFunc("/verdict/send", sendVerdict(service))
 	mux.HandleFunc("/verdict/update", updateVerdict(service))
 
+	// CSPM alert endpoints
+	mux.HandleFunc("/alerts/weekly", weeklyAlertReport(service))
+
 	// Health check endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -55,6 +58,7 @@ func main() {
 	fmt.Println("  GET  /policy/app-embedded - Fetch and save app-embedded policies")
 	fmt.Println("  GET  /verdict/send - Send verdict email with CSV")
 	fmt.Println("  POST /verdict/update - Update verdicts from CSV file")
+	fmt.Println("  GET  /alerts/weekly - Generate and send weekly CSPM alert report")
 	fmt.Println("  GET  /health - Health check")
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {

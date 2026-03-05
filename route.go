@@ -192,8 +192,8 @@ func updateVerdict(service *Service) http.HandlerFunc {
 		resp := Response{
 			Message: fmt.Sprintf("Successfully updated %d records", updatedCount),
 			Data: map[string]int{
-				"updated_count":  updatedCount,
-				"total_records":  len(capabilities),
+				"updated_count":   updatedCount,
+				"total_records":   len(capabilities),
 				"pc_pushed_count": pcPushedCount,
 			},
 		}
@@ -299,6 +299,45 @@ func fetchHostProfile(service *Service) http.HandlerFunc {
 
 		resp := Response{
 			Message: "Host profiles fetched and saved successfully!",
+		}
+
+		res, err := json.Marshal(resp)
+		if err != nil {
+			return
+		}
+
+		w.Write(res)
+	}
+}
+
+func weeklyAlertReport(service *Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		err := validateToken(r, service.Cfg.Token)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		awsCount, gcpCount, err := service.GenerateWeeklyAlertReport()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to generate weekly alert report: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+
+		resp := Response{
+			Message: "Weekly CSPM alert report sent successfully",
+			Data: map[string]interface{}{
+				"aws_alerts_count": awsCount,
+				"gcp_alerts_count": gcpCount,
+				"emailed_to":       service.Cfg.WeeklyReportTo,
+			},
 		}
 
 		res, err := json.Marshal(resp)
