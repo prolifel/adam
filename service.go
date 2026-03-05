@@ -252,3 +252,54 @@ func (s *Service) PushVerdictToPrismaCloud(verdicts []CapabilitiesCSVHeader) (in
 	fmt.Printf("Successfully pushed %d new rules to Prisma Cloud\n", addedCount)
 	return addedCount, nil
 }
+
+// GenerateWeeklyAlertReport generates the weekly CSPM alert report
+func (s *Service) GenerateWeeklyAlertReport() (int, int, error) {
+	// Login to Prisma Cloud
+	token, err := login(s.Cfg.AccessKeyId, s.Cfg.SecretAccessKey)
+	if err != nil {
+		return 0, 0, fmt.Errorf("login failed: %v", err)
+	}
+
+	// Fetch AWS alerts
+	awsAlerts, err := getCSPMAlerts(token, s.Cfg.ComplianceStandard, "AWS", true)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to fetch AWS alerts: %v", err)
+	}
+
+	// Fetch GCP alerts
+	gcpAlerts, err := getCSPMAlerts(token, s.Cfg.ComplianceStandard, "GCP", true)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to fetch GCP alerts: %v", err)
+	}
+
+	// Combine alerts for CSV generation
+	allAlerts := append(awsAlerts, gcpAlerts...)
+
+	// Generate CSV files
+	awsFile, gcpFile, err := generateAWSAndGCPCSVs(allAlerts)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to generate CSV files: %v", err)
+	}
+
+	// Send email with attachments
+	err = sendAlertEmailWithCSVs(s.Cfg, awsFile, gcpFile, s.Cfg.ComplianceStandard, len(awsAlerts), len(gcpAlerts))
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to send email: %v", err)
+	}
+
+	// Cleanup CSV files after sending
+	if awsFile != "" {
+		if err := os.Remove(awsFile); err != nil {
+			fmt.Printf("Warning: failed to delete AWS CSV file: %v\n", err)
+		}
+	}
+	if gcpFile != "" {
+		if err := os.Remove(gcpFile); err != nil {
+			fmt.Printf("Warning: failed to delete GCP CSV file: %v\n", err)
+		}
+	}
+
+	fmt.Printf("Weekly alert report completed: AWS=%d, GCP=%d\n", len(awsAlerts), len(gcpAlerts))
+	return len(awsAlerts), len(gcpAlerts), nil
+}

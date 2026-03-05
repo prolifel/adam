@@ -300,3 +300,83 @@ func getAllRuntimeHostPolicies(token string) (HostPolicy, error) {
 	fmt.Printf("Successfully fetched runtime host policy with %d rules\n", len(policy.Rules))
 	return policy, nil
 }
+
+// getCSPMAlerts fetches CSPM alerts from Prisma Cloud filtered by compliance standard and cloud type
+func getCSPMAlerts(token, complianceStandard, cloudType string, detailed bool) ([]CSPMAlert, error) {
+	const limit = 100
+	offset := 0
+	allAlerts := []CSPMAlert{}
+
+	for {
+		url := fmt.Sprintf("%s/v2/alerts", BASE_URL)
+
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			fmt.Printf("Error creating request at offset %d: %v\n", offset, err)
+			return allAlerts, err
+		}
+
+		q := req.URL.Query()
+		q.Add("complianceStandard", complianceStandard)
+		q.Add("cloud.type", cloudType)
+		if detailed {
+			q.Add("detailed", "true")
+		}
+		q.Add("timeType", "relative")
+		q.Add("timeAmount", "7")
+		q.Add("timeUnit", "day")
+		q.Add("limit", fmt.Sprintf("%d", limit))
+		q.Add("offset", fmt.Sprintf("%d", offset))
+		req.URL.RawQuery = q.Encode()
+
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Accept", "application/json")
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+
+		res, err := client.Do(req)
+		if err != nil {
+			fmt.Printf("Error fetching alerts at offset %d: %v\n", offset, err)
+			return allAlerts, err
+		}
+
+		resp, err := io.ReadAll(res.Body)
+		res.Body.Close()
+		if err != nil {
+			fmt.Printf("Error reading alert response at offset %d: %v\n", offset, err)
+			return allAlerts, err
+		}
+
+		// Try to parse as array first
+		var batchAlerts []CSPMAlert
+		err = json.Unmarshal(resp, &batchAlerts)
+		if err != nil {
+			// Try parsing as struct with items field (Prisma Cloud often returns {items: [...]})
+			var alertResponse struct {
+				Items []CSPMAlert `json:"items"`
+			}
+			err = json.Unmarshal(resp, &alertResponse)
+			if err != nil {
+				fmt.Printf("Error unmarshaling alert response at offset %d: %v\n", offset, err)
+				return allAlerts, err
+			}
+			batchAlerts = alertResponse.Items
+		}
+
+		// Add to all alerts
+		allAlerts = append(allAlerts, batchAlerts...)
+
+		fmt.Printf("Fetched %d alerts (total: %d)\n", len(batchAlerts), len(allAlerts))
+
+		// Stop if we got fewer items than the limit
+		if len(batchAlerts) < limit {
+			fmt.Println("Reached end of alerts")
+			break
+		}
+
+		// Move to next batch
+		offset += limit
+	}
+
+	return allAlerts, nil
+}

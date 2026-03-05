@@ -48,3 +48,58 @@ Adam`, timestamp, csvFilename)
 	fmt.Printf("Email sent successfully to: %s\n", strings.Join(recipients, ", "))
 	return nil
 }
+
+// sendAlertEmailWithCSVs sends separate emails for AWS and GCP alerts
+func sendAlertEmailWithCSVs(cfg Config, awsCSV, gcpCSV, complianceStandard string, awsCount, gcpCount int) error {
+	// Parse recipient emails from WeeklyReportTo
+	recipients := strings.Split(cfg.WeeklyReportTo, ",")
+	for i, email := range recipients {
+		recipients[i] = strings.TrimSpace(email)
+	}
+
+	d := gomail.NewDialer(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUsername, cfg.SMTPPassword)
+
+	// Send AWS email if there are AWS alerts
+	if awsCSV != "" && awsCount > 0 {
+		m := gomail.NewMessage()
+		m.SetHeader("From", cfg.EmailFrom)
+		m.SetHeader("To", recipients...)
+
+		timestamp := time.Now().Format("2006-01-02")
+		subject := fmt.Sprintf("Weekly CSPM Alert Report - AWS - %s - %s", complianceStandard, timestamp)
+		m.SetHeader("Subject", subject)
+
+		// Generate HTML body for AWS
+		htmlBody := generateAlertEmailBody(complianceStandard, "AWS", awsCount)
+		m.SetBody("text/html", htmlBody)
+		m.Attach(awsCSV)
+
+		if err := d.DialAndSend(m); err != nil {
+			return fmt.Errorf("failed to send AWS email: %v", err)
+		}
+		fmt.Printf("AWS alert report email sent successfully to: %s\n", strings.Join(recipients, ", "))
+	}
+
+	// Send GCP email if there are GCP alerts
+	if gcpCSV != "" && gcpCount > 0 {
+		m := gomail.NewMessage()
+		m.SetHeader("From", cfg.EmailFrom)
+		m.SetHeader("To", recipients...)
+
+		timestamp := time.Now().Format("2006-01-02")
+		subject := fmt.Sprintf("Weekly CSPM Alert Report - GCP - %s - %s", complianceStandard, timestamp)
+		m.SetHeader("Subject", subject)
+
+		// Generate HTML body for GCP
+		htmlBody := generateAlertEmailBody(complianceStandard, "GCP", gcpCount)
+		m.SetBody("text/html", htmlBody)
+		m.Attach(gcpCSV)
+
+		if err := d.DialAndSend(m); err != nil {
+			return fmt.Errorf("failed to send GCP email: %v", err)
+		}
+		fmt.Printf("GCP alert report email sent successfully to: %s\n", strings.Join(recipients, ", "))
+	}
+
+	return nil
+}
